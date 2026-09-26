@@ -10,6 +10,7 @@ from evaluation.testset import build_test_set
 from ingestion.cleaning import build_clean_dataframe
 from ingestion.crossref import fetch_source_records, load_raw_records
 from observability.quality import build_freshness_report, run_data_quality_checks
+from observability.reporting import generate_phase1_report
 from retrieval.index import LocalEmbeddingIndex
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -84,6 +85,24 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
     logger.info(
         f"-> Freshness SLA Status: is_fresh = {freshness_report.get('is_fresh')} "
         f"(stale: {freshness_report.get('stale_rows')}/{freshness_report.get('total_rows')})"
+    )
+
+    # 9. Generate Phase 1 markdown report
+    logger.info(f"[8/8] Rendering Phase 1 markdown report to {settings.paths.baseline_report}...")
+    source_summary = {
+        "source_api": settings.source_api,
+        "query": settings.source_query,
+        "total_records": len(records),
+        "clean_rows": len(df_clean),
+        "freshness_threshold_days": settings.freshness_threshold_days,
+        "run_date": run_date.isoformat(),
+    }
+    generate_phase1_report(
+        report_path=settings.paths.baseline_report,
+        source_summary=source_summary,
+        metrics=eval_bundle.summary,
+        quality=quality_report,
+        freshness=freshness_report,
     )
 
     return {
