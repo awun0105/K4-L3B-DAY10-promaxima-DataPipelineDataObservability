@@ -40,7 +40,7 @@ def build_test_set(df: pd.DataFrame, output_path) -> list[dict[str, Any]]:
 
     templates = {
         "summary": "What is the summary of '{title}'?", "authors": "Who authored '{title}'?",
-        "date": "When was '{title}' published?", "categories": "Which categories are listed for '{title}'?",
+        "date": "When was '{title}' published?", "categories": "What categories are listed for '{title}'?",
     }
     value_columns = {"summary": "summary", "authors": "authors", "date": "published", "categories": "categories"}
     cases: list[dict[str, Any]] = []

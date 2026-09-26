@@ -14,6 +14,13 @@ def _value(payload: dict[str, Any], key: str) -> str:
     return str(value)
 
 
+def _first_value(payload: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        if payload.get(key) is not None:
+            return _value(payload, key)
+    return "Not available (artifact dependency not supplied)"
+
+
 def _markdown_cell(value: str) -> str:
     return value.replace("|", "\\|").replace("\n", " ")
 
@@ -44,8 +51,8 @@ def generate_phase1_report(
     """Create a baseline report strictly from the supplied pipeline artifacts."""
     lines = [
         "# Phase 1 Data Pipeline Report", "", "## Dataset / Data Quality", "",
-        f"- Source: {_value(source_summary, 'source')}",
-        f"- Records: {_value(source_summary, 'records')}",
+        f"- Source: {_first_value(source_summary, 'source', 'source_api')}",
+        f"- Records: {_first_value(source_summary, 'records', 'clean_rows', 'total_records')}",
         f"- Quality gate: {_quality_status(quality)}",
         f"- Quality report error: {_value(quality, 'error')}", "", "## Freshness", "",
         f"- Status: {_freshness_status(freshness)}",
