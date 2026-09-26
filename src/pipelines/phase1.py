@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from core.config import Settings, load_settings
-from core.utils import now_utc
+from core.utils import now_utc, write_csv, write_json
 from ingestion.cleaning import build_clean_dataframe
 from ingestion.crossref import fetch_source_records, load_raw_records
 
@@ -35,6 +35,11 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
     run_date = now_utc()
     df_clean = build_clean_dataframe(records, run_date=run_date)
     logger.info(f"-> Clean DataFrame generated with {len(df_clean)} rows.")
+
+    # 4. Save clean artifacts
+    logger.info(f"[3/8] Persisting clean dataset to {settings.paths.clean_csv} & {settings.paths.clean_json}...")
+    write_csv(df_clean, settings.paths.clean_csv)
+    write_json(settings.paths.clean_json, df_clean.to_dict(orient="records"))
 
     return {"records": records, "df_clean": df_clean}
 
