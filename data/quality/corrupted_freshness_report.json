@@ -1,0 +1,11 @@
+{
+  "total_records": 22,
+  "stale_records": 7,
+  "stale_ratio": 0.3181818181818182,
+  "is_fresh": false,
+  "stale_threshold_days": 180,
+  "null_age_days": 0,
+  "invalid_age_days": 0,
+  "latest_published": "2026-06-12",
+  "oldest_published": "2021-05-14"
+}

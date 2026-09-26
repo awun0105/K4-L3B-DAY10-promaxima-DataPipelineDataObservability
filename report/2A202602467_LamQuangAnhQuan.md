@@ -127,17 +127,17 @@ uv run python script/run_corruption_flow.py
 
 | Metric/signal          | Baseline | Corrupted | Repaired | Nhận xét của cá nhân |
 | ---------------------- | -------: | --------: | -------: | ------------------------- |
-| `retrieval_hit_rate` |    90.0% |     50.0% |    90.0% | Sụt giảm mạnh khi bị tiêm lỗi, phục hồi hoàn toàn sau repair |
-| `mean_token_f1`      |    0.850 |     0.350 |    0.850 | Silent failure làm suy giảm độ chính xác câu trả lời |
-| `judge_accuracy`     |    90.0% |     40.0% |    90.0% | LLM judge đánh giá câu trả lời bị sai lệch nội dung |
-| `mean_judge_score`   |     4.50 |      2.10 |     4.50 | Thang điểm 1-5 phản ánh rõ mức độ tin cậy của AI |
-| Quality checks         |     PASS |      FAIL |     PASS | GX 1.x bắt thành công vi phạm unique ID và blank summary |
-| Freshness status       |    FRESH |     STALE |    FRESH | Cảnh báo vi phạm ngưỡng 25% bài báo quá hạn 180 ngày |
+| `retrieval_hit_rate` |   100.0% |    100.0% |   100.0% | Top_k=3 vẫn tìm thấy tài liệu liên quan dù một số bài bị cắt tiêu đề hoặc xóa summary |
+| `mean_token_f1`      |   0.7076 |    0.5611 |   0.7076 | Silent failure làm suy giảm độ chính xác câu trả lời (-0.1465), phục hồi trọn vẹn sau repair |
+| `judge_accuracy`     |    50.0% |     60.0% |    80.0% | LLM judge đánh giá theo schema ngữ nghĩa nghiêm ngặt; bản repaired đạt độ chính xác cao nhất |
+| `mean_judge_score`   |     3.40 |      3.20 |     3.60 | Thang điểm 1-5 phản ánh rõ sự suy giảm chất lượng và mức độ tin cậy sau phục hồi |
+| Quality checks         |     PASS |      FAIL |     PASS | GX 1.x bắt thành công vi phạm unique ID (4 unexpected) và blank summary (2 bản ghi) |
+| Freshness status       |    FRESH |     STALE |    FRESH | Cảnh báo vi phạm ngưỡng 25% bài báo quá hạn 180 ngày (tỷ lệ cũ vọt lên 31.82%) |
 
 ### Kết luận từ số liệu
 
-1. **Chuỗi lỗi dữ liệu:** Tiêm lỗi cắt ngắn tiêu đề, blank summary và stale date → GX Quality Gate báo `success = False`, Freshness báo `is_fresh = False` → Agent retrieval hit rate giảm từ 90% xuống 50%, Token F1 tụt từ 0.85 xuống 0.35 (Silent Failure).
-2. **Chuỗi phục hồi:** Idempotent Repair tái tạo Clean DataFrame từ Raw snapshot → Quality Gate và Freshness SLA xanh trở lại → Agent lấy lại phong độ với Hit Rate 90% và Token F1 0.85.
+1. **Chuỗi lỗi dữ liệu:** Tiêm lỗi blank summary, duplicate rows và stale date → GX Quality Gate báo `success = False`, Freshness báo `is_fresh = False` (tỷ lệ cũ 31.82%) → Agent dù vẫn hit document nhưng bị Silent Failure khi Token F1 tụt mạnh từ 0.7076 xuống 0.5611 (-0.1465).
+2. **Chuỗi phục hồi (Bonus B2):** Khi phát hiện Quality Gate vi phạm, cơ chế Auto Self-Healing kích hoạt Idempotent Repair tái tạo Clean DataFrame từ Raw snapshot bất biến → Quality Gate và Freshness SLA xanh trở lại → Agent phục hồi 100% điểm số Token F1 về 0.7076 và Judge Score tăng lên 3.60.
 
 ## 9. Điều học được và hướng cải thiện
 

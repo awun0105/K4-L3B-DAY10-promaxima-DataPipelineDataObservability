@@ -1,0 +1,108 @@
+{
+  "success": false,
+  "row_count": 22,
+  "expectations": [
+    {
+      "name": "table_row_count",
+      "success": true,
+      "result": {
+        "observed_value": 22
+      },
+      "exception_info": {
+        "raised_exception": false,
+        "exception_traceback": null,
+        "exception_message": null
+      }
+    },
+    {
+      "name": "paper_id_not_null",
+      "success": true,
+      "result": {
+        "element_count": 22,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "partial_unexpected_list": [],
+        "partial_unexpected_counts": [],
+        "partial_unexpected_index_list": []
+      },
+      "exception_info": {
+        "raised_exception": false,
+        "exception_traceback": null,
+        "exception_message": null
+      }
+    },
+    {
+      "name": "paper_id_unique",
+      "success": false,
+      "result": {
+        "element_count": 22,
+        "unexpected_count": 4,
+        "unexpected_percent": 18.181818181818183,
+        "partial_unexpected_list": [
+          "10.1145/3637528.3671817",
+          "10.1145/3637528.3671818",
+          "10.1145/3637528.3671817",
+          "10.1145/3637528.3671818"
+        ],
+        "missing_count": 0,
+        "missing_percent": 0.0,
+        "unexpected_percent_total": 18.181818181818183,
+        "unexpected_percent_nonmissing": 18.181818181818183,
+        "partial_unexpected_counts": [
+          {
+            "value": "10.1145/3637528.3671817",
+            "count": 2
+          },
+          {
+            "value": "10.1145/3637528.3671818",
+            "count": 2
+          }
+        ],
+        "partial_unexpected_index_list": [
+          12,
+          13,
+          20,
+          21
+        ]
+      },
+      "exception_info": {
+        "raised_exception": false,
+        "exception_traceback": null,
+        "exception_message": null
+      }
+    },
+    {
+      "name": "summary_min_length",
+      "success": false,
+      "result": {
+        "element_count": 22,
+        "unexpected_count": 2,
+        "unexpected_percent": 9.090909090909092,
+        "partial_unexpected_list": [
+          "",
+          ""
+        ],
+        "missing_count": 0,
+        "missing_percent": 0.0,
+        "unexpected_percent_total": 9.090909090909092,
+        "unexpected_percent_nonmissing": 9.090909090909092,
+        "partial_unexpected_counts": [
+          {
+            "value": "",
+            "count": 2
+          }
+        ],
+        "partial_unexpected_index_list": [
+          0,
+          1
+        ]
+      },
+      "exception_info": {
+        "raised_exception": false,
+        "exception_traceback": null,
+        "exception_message": null
+      }
+    }
+  ],
+  "missing_columns": []
+}

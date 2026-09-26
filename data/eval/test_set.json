@@ -1,0 +1,92 @@
+[
+  {
+    "id": "benchmark-01",
+    "question_type": "summary",
+    "question": "What is the summary of 'Agentic Retrieval-Augmented Generation for Knowledge-Intensive Tasks'?",
+    "ground_truth": "Retrieval-Augmented Generation (RAG) significantly improves large language model accuracy by grounding responses in retrieved passages. We explore agentic multi-hop reasoning and routing across heterogeneous vector indices.",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671801"
+    ]
+  },
+  {
+    "id": "benchmark-02",
+    "question_type": "summary",
+    "question": "What is the summary of 'Data Observability and Quality Gates for Production RAG Systems'?",
+    "ground_truth": "Silent data corruption in RAG pipelines degrades LLM answer faithfulness without throwing runtime errors. We introduce automated quality gates using Great Expectations 1.x to catch stale and malformed embeddings before serving.",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671802"
+    ]
+  },
+  {
+    "id": "benchmark-03",
+    "question_type": "summary",
+    "question": "What is the summary of 'Mitigating Ghost Vectors in Dense Retrieval via Idempotent Indexing'?",
+    "ground_truth": "Soft-deletions in vector databases leave orphaned embeddings that lead to hallucinations. This paper designs an idempotent index synchronization protocol that guarantees complete purges of outdated vector artifacts.",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671803"
+    ]
+  },
+  {
+    "id": "benchmark-04",
+    "question_type": "authors",
+    "question": "Who authored 'Agentic Retrieval-Augmented Generation for Knowledge-Intensive Tasks'?",
+    "ground_truth": "Minh Nguyen, Hoang Le",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671801"
+    ]
+  },
+  {
+    "id": "benchmark-05",
+    "question_type": "authors",
+    "question": "Who authored 'Data Observability and Quality Gates for Production RAG Systems'?",
+    "ground_truth": "Anh Tran, Quoc Pham",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671802"
+    ]
+  },
+  {
+    "id": "benchmark-06",
+    "question_type": "authors",
+    "question": "Who authored 'Mitigating Ghost Vectors in Dense Retrieval via Idempotent Indexing'?",
+    "ground_truth": "Duc Vu, Thao Dang",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671803"
+    ]
+  },
+  {
+    "id": "benchmark-07",
+    "question_type": "date",
+    "question": "When was 'Agentic Retrieval-Augmented Generation for Knowledge-Intensive Tasks' published?",
+    "ground_truth": "2026-05-20",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671801"
+    ]
+  },
+  {
+    "id": "benchmark-08",
+    "question_type": "date",
+    "question": "When was 'Data Observability and Quality Gates for Production RAG Systems' published?",
+    "ground_truth": "2026-06-12",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671802"
+    ]
+  },
+  {
+    "id": "benchmark-09",
+    "question_type": "categories",
+    "question": "Which categories are listed for 'Agentic Retrieval-Augmented Generation for Knowledge-Intensive Tasks'?",
+    "ground_truth": "Artificial Intelligence, Information Retrieval",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671801"
+    ]
+  },
+  {
+    "id": "benchmark-10",
+    "question_type": "categories",
+    "question": "Which categories are listed for 'Data Observability and Quality Gates for Production RAG Systems'?",
+    "ground_truth": "Software Engineering, Data Systems",
+    "ground_truth_doc_ids": [
+      "10.1145/3637528.3671802"
+    ]
+  }
+]
