@@ -20,7 +20,7 @@
 
 | Module/deliverable | File/hàm phụ trách | Input nhận vào | Output bàn giao  | Trạng thái                                 |
 | ------------------ | --------------------- | ---------------- | ----------------- | -------------------------------------------- |
-| Thu thập & Phân tích Crossref API | `src/ingestion/crossref.py` | Crossref REST API / Local snapshot | `data/raw/crossref_response.json`, `data/raw/crossref_records.json` | [Hoàn thành/Một phần/Chưa hoàn thành] |
+| Thu thập & Phân tích Crossref API | `src/ingestion/crossref.py` | Crossref REST API / Local snapshot | `data/raw/crossref_response.json`, `data/raw/crossref_records.json` | Hoàn thành |
 | Làm sạch dữ liệu & Pre-embed | `src/ingestion/cleaning.py` | `PaperRecord` raw list | `data/clean/papers_clean.csv`, `data/clean/papers_clean.json` | [Hoàn thành/Một phần/Chưa hoàn thành] |
 | Vector Indexing & Embeddings | `src/retrieval/embeddings.py`, `src/retrieval/index.py` | Clean Dataframe | ChromaDB collections (`papers-baseline`, `papers-corrupted`, `papers-repaired`) | [Hoàn thành/Một phần/Chưa hoàn thành] |
 
