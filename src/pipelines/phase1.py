@@ -9,6 +9,7 @@ from evaluation.metrics import EvaluationBundle, evaluate_pipeline
 from evaluation.testset import build_test_set
 from ingestion.cleaning import build_clean_dataframe
 from ingestion.crossref import fetch_source_records, load_raw_records
+from observability.quality import build_freshness_report, run_data_quality_checks
 from retrieval.index import LocalEmbeddingIndex
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -75,12 +76,24 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
     token_f1 = eval_bundle.summary.get("mean_token_f1", 0.0)
     logger.info(f"-> Baseline Metrics: Retrieval Hit Rate = {hit_rate:.2%}, Mean Token F1 = {token_f1:.4f}")
 
+    # 8. Run Data Quality Gate (GX 1.x) & Freshness SLA
+    logger.info("[7/8] Running Great Expectations 1.x Quality Gate & Freshness SLA check...")
+    quality_report = run_data_quality_checks(df_clean, settings=settings, report_name="baseline")
+    freshness_report = build_freshness_report(df_clean, settings=settings, report_path=settings.paths.freshness_report)
+    logger.info(f"-> Quality Gate Status: success = {quality_report.get('success')}")
+    logger.info(
+        f"-> Freshness SLA Status: is_fresh = {freshness_report.get('is_fresh')} "
+        f"(stale: {freshness_report.get('stale_rows')}/{freshness_report.get('total_rows')})"
+    )
+
     return {
         "records": records,
         "df_clean": df_clean,
         "index": index,
         "test_set": test_set,
         "eval_bundle": eval_bundle,
+        "quality_report": quality_report,
+        "freshness_report": freshness_report,
     }
 
 
