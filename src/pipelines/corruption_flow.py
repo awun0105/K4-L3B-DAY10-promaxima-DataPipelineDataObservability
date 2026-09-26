@@ -7,6 +7,7 @@ import pandas as pd
 
 from core.config import Settings, load_settings
 from core.utils import read_json, write_csv, write_json
+from evaluation.metrics import EvaluationBundle, evaluate_pipeline
 from ingestion.corruption import corrupt_clean_dataframe
 from pipelines.phase1 import run_baseline_pipeline
 from retrieval.index import LocalEmbeddingIndex
@@ -50,10 +51,23 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
         embeddings_output_path=settings.paths.corrupted_embeddings_json,
     )
 
+    # 4. Evaluate corrupted RAG performance on the SAME benchmark test set
+    logger.info("[4/7] Evaluating RAG performance on corrupted dataset (measuring Silent Failure)...")
+    corrupted_bundle: EvaluationBundle = evaluate_pipeline(
+        settings=settings,
+        index=corrupted_index,
+        test_set_path=settings.paths.eval_testset,
+        metrics_output_path=settings.paths.corrupted_metrics,
+        answers_output_path=settings.paths.corrupted_answers,
+    )
+    c_hr = corrupted_bundle.summary.get("retrieval_hit_rate", 0.0)
+    c_f1 = corrupted_bundle.summary.get("mean_token_f1", 0.0)
+    logger.info(f"-> Corrupted Metrics: Retrieval Hit Rate = {c_hr:.2%}, Mean Token F1 = {c_f1:.4f}")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
-        "corrupted_index": corrupted_index,
+        "corrupted_bundle": corrupted_bundle,
         "baseline_metrics": baseline_metrics,
     }
 
