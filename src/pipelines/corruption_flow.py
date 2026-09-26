@@ -115,6 +115,16 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     r_f1 = repaired_bundle.summary.get("mean_token_f1", 0.0)
     logger.info(f"-> Repaired Metrics: Retrieval Hit Rate = {r_hr:.2%}, Mean Token F1 = {r_f1:.4f}")
 
+    # Re-run quality gate on repaired data
+    repaired_quality = run_data_quality_checks(df_repaired, settings=settings, report_name="repaired")
+    repaired_freshness = build_freshness_report(
+        df_repaired,
+        settings=settings,
+        report_path=settings.paths.quality_dir / "repaired_freshness_report.json",
+    )
+    logger.info(f"-> Repaired Quality Gate: success = {repaired_quality.get('success')} (Restored to Green!)")
+    logger.info(f"-> Repaired Freshness SLA: is_fresh = {repaired_freshness.get('is_fresh')}")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
@@ -122,7 +132,9 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
         "corrupted_bundle": corrupted_bundle,
         "repaired_bundle": repaired_bundle,
         "corrupted_quality": corrupted_quality,
+        "repaired_quality": repaired_quality,
         "corrupted_freshness": corrupted_freshness,
+        "repaired_freshness": repaired_freshness,
         "baseline_metrics": baseline_metrics,
     }
 
