@@ -12,6 +12,7 @@ from ingestion.cleaning import build_clean_dataframe
 from ingestion.corruption import corrupt_clean_dataframe
 from ingestion.crossref import load_raw_records
 from observability.quality import build_freshness_report, run_data_quality_checks
+from observability.reporting import generate_corruption_report
 from pipelines.phase1 import run_baseline_pipeline
 from retrieval.index import LocalEmbeddingIndex
 
@@ -19,9 +20,58 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("corruption_flow")
 
 
+def print_comparison_table(
+    baseline_metrics: dict[str, Any],
+    corrupted_metrics: dict[str, Any],
+    repaired_metrics: dict[str, Any],
+    corrupted_quality: dict[str, Any],
+    repaired_quality: dict[str, Any],
+    corrupted_freshness: dict[str, Any],
+    repaired_freshness: dict[str, Any],
+) -> None:
+    """Print an eye-catching 3-state comparison table in the console for Live Demo."""
+    b_hr = baseline_metrics.get("retrieval_hit_rate", 0.0)
+    c_hr = corrupted_metrics.get("retrieval_hit_rate", 0.0)
+    r_hr = repaired_metrics.get("retrieval_hit_rate", 0.0)
+
+    b_f1 = baseline_metrics.get("mean_token_f1", 0.0)
+    c_f1 = corrupted_metrics.get("mean_token_f1", 0.0)
+    r_f1 = repaired_metrics.get("mean_token_f1", 0.0)
+
+    b_acc = baseline_metrics.get("judge_accuracy", 0.0)
+    c_acc = corrupted_metrics.get("judge_accuracy", 0.0)
+    r_acc = repaired_metrics.get("judge_accuracy", 0.0)
+
+    b_score = baseline_metrics.get("mean_judge_score", 0.0)
+    c_score = corrupted_metrics.get("mean_judge_score", 0.0)
+    r_score = repaired_metrics.get("mean_judge_score", 0.0)
+
+    c_gx = "PASS" if corrupted_quality.get("success") else "FAIL (ALARM)"
+    r_gx = "PASS" if repaired_quality.get("success") else "FAIL"
+
+    c_fresh = "FRESH" if corrupted_freshness.get("is_fresh") else "STALE (SLA VIOLATION)"
+    r_fresh = "FRESH" if repaired_freshness.get("is_fresh") else "STALE"
+
+    print("\n" + "=" * 80)
+    print("      DATA OBSERVABILITY & RAG BENCHMARK: 3-STATE QUANTITATIVE COMPARISON       ")
+    print("=" * 80)
+    print(f"{'Metric / Signal':<28} | {'Baseline':<14} | {'Corrupted':<16} | {'Repaired':<14}")
+    print("-" * 80)
+    print(f"{'Retrieval Hit Rate':<28} | {b_hr:<14.2%} | {c_hr:<16.2%} | {r_hr:<14.2%}")
+    print(f"{'Mean Token F1':<28} | {b_f1:<14.4f} | {c_f1:<16.4f} | {r_f1:<14.4f}")
+    print(f"{'Judge Accuracy':<28} | {b_acc:<14.2%} | {c_acc:<16.2%} | {r_acc:<14.2%}")
+    print(f"{'Mean Judge Score (1-5)':<28} | {b_score:<14.2f} | {c_score:<16.2f} | {r_score:<14.2f}")
+    print(f"{'GX Quality Gate':<28} | {'PASS':<14} | {c_gx:<16} | {r_gx:<14}")
+    print(f"{'Freshness SLA':<28} | {'FRESH':<14} | {c_fresh:<16} | {r_fresh:<14}")
+    print("=" * 80 + "\n")
+
+
 def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str, Any]:
     """Execute end-to-end Data Corruption, Silent Failure Evaluation,
+
     Idempotent Repair, and 3-State Comparison Reporting.
+
+    Includes Bonus B2: Automated Self-Healing / Auto-Repair Pipeline.
     """
     if settings is None:
         settings = load_settings()
@@ -78,7 +128,7 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     logger.warning(f"[Quality Gate Corrupted] success = {corrupted_quality.get('success')} (Expectations Failed!)")
     logger.warning(f"[Freshness SLA Corrupted] is_fresh = {corrupted_freshness.get('is_fresh')} (SLA Violated!)")
 
-    # 6. Bonus B2 Auto Self-Healing trigger & Idempotent Repair
+    # 6. Idempotent Repair & Bonus B2 Auto Self-Healing
     logger.info("--------------------------------------------------------------------------------")
     if not corrupted_quality.get("success") or not corrupted_freshness.get("is_fresh"):
         logger.warning("[BONUS B2: AUTO SELF-HEALING] Data Quality / Freshness Gate triggered ALARM!")
@@ -125,8 +175,35 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     logger.info(f"-> Repaired Quality Gate: success = {repaired_quality.get('success')} (Restored to Green!)")
     logger.info(f"-> Repaired Freshness SLA: is_fresh = {repaired_freshness.get('is_fresh')}")
 
+    # 7. Generate comparison report & display console table
+    logger.info(f"[7/7] Generating 3-state comparison Markdown report at {settings.paths.comparison_report}...")
+    generate_corruption_report(
+        report_path=settings.paths.comparison_report,
+        baseline_metrics=baseline_metrics,
+        corrupted_metrics=corrupted_bundle.summary,
+        repaired_metrics=repaired_bundle.summary,
+        corrupted_quality=corrupted_quality,
+        repaired_quality=repaired_quality,
+        corrupted_freshness=corrupted_freshness,
+        repaired_freshness=repaired_freshness,
+    )
+
+    # Display console table for Live Demo
+    print_comparison_table(
+        baseline_metrics=baseline_metrics,
+        corrupted_metrics=corrupted_bundle.summary,
+        repaired_metrics=repaired_bundle.summary,
+        corrupted_quality=corrupted_quality,
+        repaired_quality=repaired_quality,
+        corrupted_freshness=corrupted_freshness,
+        repaired_freshness=repaired_freshness,
+    )
+
+    logger.info("================================================================================")
+    logger.info("       CORRUPTION, EVALUATION & REPAIR FLOW COMPLETED SUCCESSFULLY!             ")
+    logger.info("================================================================================")
+
     return {
-        "df_clean": df_clean,
         "df_corrupted": df_corrupted,
         "df_repaired": df_repaired,
         "corrupted_bundle": corrupted_bundle,
@@ -135,7 +212,6 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
         "repaired_quality": repaired_quality,
         "corrupted_freshness": corrupted_freshness,
         "repaired_freshness": repaired_freshness,
-        "baseline_metrics": baseline_metrics,
     }
 
 
