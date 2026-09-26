@@ -6,9 +6,11 @@ from typing import Any
 import pandas as pd
 
 from core.config import Settings, load_settings
-from core.utils import read_json, write_csv, write_json
+from core.utils import now_utc, read_json, write_csv, write_json
 from evaluation.metrics import EvaluationBundle, evaluate_pipeline
+from ingestion.cleaning import build_clean_dataframe
 from ingestion.corruption import corrupt_clean_dataframe
+from ingestion.crossref import load_raw_records
 from observability.quality import build_freshness_report, run_data_quality_checks
 from pipelines.phase1 import run_baseline_pipeline
 from retrieval.index import LocalEmbeddingIndex
@@ -76,7 +78,7 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     logger.warning(f"[Quality Gate Corrupted] success = {corrupted_quality.get('success')} (Expectations Failed!)")
     logger.warning(f"[Freshness SLA Corrupted] is_fresh = {corrupted_freshness.get('is_fresh')} (SLA Violated!)")
 
-    # 6. Bonus B2 Auto Self-Healing trigger
+    # 6. Bonus B2 Auto Self-Healing trigger & Idempotent Repair
     logger.info("--------------------------------------------------------------------------------")
     if not corrupted_quality.get("success") or not corrupted_freshness.get("is_fresh"):
         logger.warning("[BONUS B2: AUTO SELF-HEALING] Data Quality / Freshness Gate triggered ALARM!")
@@ -84,9 +86,20 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     else:
         logger.info("[6/7] Initiating Idempotent Repair from raw snapshot...")
 
+    raw_snapshot_path = settings.paths.raw_records_json
+    if not raw_snapshot_path.exists():
+        raw_snapshot_path = settings.paths.raw_api_response
+
+    raw_records = load_raw_records(raw_snapshot_path)
+    df_repaired = build_clean_dataframe(raw_records, run_date=now_utc())
+    write_csv(df_repaired, settings.paths.repaired_clean_csv)
+    write_json(settings.paths.repaired_clean_json, df_repaired.to_dict(orient="records"))
+    logger.info(f"-> Idempotent Repair restored clean dataset with {len(df_repaired)} rows.")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
+        "df_repaired": df_repaired,
         "corrupted_bundle": corrupted_bundle,
         "corrupted_quality": corrupted_quality,
         "corrupted_freshness": corrupted_freshness,
