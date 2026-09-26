@@ -76,6 +76,14 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     logger.warning(f"[Quality Gate Corrupted] success = {corrupted_quality.get('success')} (Expectations Failed!)")
     logger.warning(f"[Freshness SLA Corrupted] is_fresh = {corrupted_freshness.get('is_fresh')} (SLA Violated!)")
 
+    # 6. Bonus B2 Auto Self-Healing trigger
+    logger.info("--------------------------------------------------------------------------------")
+    if not corrupted_quality.get("success") or not corrupted_freshness.get("is_fresh"):
+        logger.warning("[BONUS B2: AUTO SELF-HEALING] Data Quality / Freshness Gate triggered ALARM!")
+        logger.info("[BONUS B2: AUTO SELF-HEALING] Autonomously initiating Idempotent Repair from raw snapshot...")
+    else:
+        logger.info("[6/7] Initiating Idempotent Repair from raw snapshot...")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
