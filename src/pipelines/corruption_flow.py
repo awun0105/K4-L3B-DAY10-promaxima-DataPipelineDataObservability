@@ -9,6 +9,7 @@ from core.config import Settings, load_settings
 from core.utils import read_json, write_csv, write_json
 from evaluation.metrics import EvaluationBundle, evaluate_pipeline
 from ingestion.corruption import corrupt_clean_dataframe
+from observability.quality import build_freshness_report, run_data_quality_checks
 from pipelines.phase1 import run_baseline_pipeline
 from retrieval.index import LocalEmbeddingIndex
 
@@ -64,10 +65,23 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     c_f1 = corrupted_bundle.summary.get("mean_token_f1", 0.0)
     logger.info(f"-> Corrupted Metrics: Retrieval Hit Rate = {c_hr:.2%}, Mean Token F1 = {c_f1:.4f}")
 
+    # 5. Run Quality Gate & Freshness on corrupted data
+    logger.info("[5/7] Running Data Quality Gate on corrupted dataset...")
+    corrupted_quality = run_data_quality_checks(df_corrupted, settings=settings, report_name="corrupted")
+    corrupted_freshness = build_freshness_report(
+        df_corrupted,
+        settings=settings,
+        report_path=settings.paths.quality_dir / "corrupted_freshness_report.json",
+    )
+    logger.warning(f"[Quality Gate Corrupted] success = {corrupted_quality.get('success')} (Expectations Failed!)")
+    logger.warning(f"[Freshness SLA Corrupted] is_fresh = {corrupted_freshness.get('is_fresh')} (SLA Violated!)")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
         "corrupted_bundle": corrupted_bundle,
+        "corrupted_quality": corrupted_quality,
+        "corrupted_freshness": corrupted_freshness,
         "baseline_metrics": baseline_metrics,
     }
 
