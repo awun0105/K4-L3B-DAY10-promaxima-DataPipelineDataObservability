@@ -22,7 +22,7 @@
 | ------------------ | --------------------- | ---------------- | ----------------- | -------------------------------------------- |
 | Thu thập & Phân tích Crossref API | `src/ingestion/crossref.py` | Crossref REST API / Local snapshot | `data/raw/crossref_response.json`, `data/raw/crossref_records.json` | Hoàn thành |
 | Làm sạch dữ liệu & Pre-embed | `src/ingestion/cleaning.py` | `PaperRecord` raw list | `data/clean/papers_clean.csv`, `data/clean/papers_clean.json` | Hoàn thành |
-| Vector Indexing & Embeddings | `src/retrieval/embeddings.py`, `src/retrieval/index.py` | Clean Dataframe | ChromaDB collections (`papers-baseline`, `papers-corrupted`, `papers-repaired`) | [Hoàn thành/Một phần/Chưa hoàn thành] |
+| Vector Indexing & Embeddings | `src/retrieval/embeddings.py`, `src/retrieval/index.py` | Clean Dataframe | ChromaDB collections (`papers-baseline`, `papers-corrupted`, `papers-repaired`) | Hoàn thành |
 
 Chỉ nhận ownership cho phần bạn trực tiếp thực hiện. Liên hệ rõ phần việc của bạn với đầu vào, đầu ra và các thành viên phụ thuộc vào phần đó.
 
