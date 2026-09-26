@@ -12,13 +12,27 @@ from ingestion.crossref import fetch_source_records, load_raw_records
 from observability.quality import build_freshness_report, run_data_quality_checks
 from observability.reporting import generate_phase1_report
 from retrieval.index import LocalEmbeddingIndex
+from retrieval.qa import answer_question
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("phase1_pipeline")
 
 
 def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
-    """Execute end-to-end Phase 1 Baseline Data Pipeline."""
+    """Execute end-to-end Phase 1 Baseline Data Pipeline.
+
+    Steps:
+    1. Load settings and configuration.
+    2. Ingest raw records (fetch via API with fallback to local snapshot).
+    3. Clean and standardize raw data into DataFrame with `text_for_embedding`.
+    4. Save clean dataset to CSV and JSON artifacts.
+    5. Build Chroma vector index for baseline collection.
+    6. Generate or load 10-question evaluation benchmark test set.
+    7. Evaluate baseline retrieval and answer metrics (Hit Rate, Token F1).
+    8. Execute Great Expectations 1.x Quality Gate and Freshness SLA monitoring.
+    9. Render Phase 1 summary Markdown report.
+    10. Execute quick Agent QA demo on sample questions.
+    """
     if settings is None:
         settings = load_settings()
 
@@ -105,8 +119,29 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
         freshness=freshness_report,
     )
 
+    # 10. Quick Agent Demo on sample question
+    if test_set:
+        demo_question = test_set[0]["question"]
+        demo_res = answer_question(demo_question, settings=settings, index=index)
+        write_json(
+            settings.paths.demo_answers,
+            [
+                {
+                    "question": demo_res.question,
+                    "answer": demo_res.answer,
+                    "retrieved_doc_ids": demo_res.retrieved_doc_ids,
+                    "retrieved_titles": demo_res.retrieved_titles,
+                }
+            ],
+        )
+        logger.info(f"[Agent Demo] Q: {demo_res.question}")
+        logger.info(f"[Agent Demo] A: {demo_res.answer}")
+
+    logger.info("================================================================================")
+    logger.info("           PHASE 1 BASELINE PIPELINE COMPLETED SUCCESSFULLY!                    ")
+    logger.info("================================================================================")
+
     return {
-        "records": records,
         "df_clean": df_clean,
         "index": index,
         "test_set": test_set,
