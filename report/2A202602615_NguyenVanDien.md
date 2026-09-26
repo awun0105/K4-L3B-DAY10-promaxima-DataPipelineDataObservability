@@ -23,6 +23,7 @@
 | Thu thập & Phân tích Crossref API | `src/ingestion/crossref.py` | Crossref REST API / Local snapshot | `data/raw/crossref_response.json`, `data/raw/crossref_records.json` | Hoàn thành |
 | Làm sạch dữ liệu & Pre-embed | `src/ingestion/cleaning.py` | `PaperRecord` raw list | `data/clean/papers_clean.csv`, `data/clean/papers_clean.json` | Hoàn thành |
 | Vector Indexing & Embeddings | `src/retrieval/embeddings.py`, `src/retrieval/index.py` | Clean Dataframe | ChromaDB collections (`papers-baseline`, `papers-corrupted`, `papers-repaired`) | Hoàn thành |
+| Giả lập lỗi dữ liệu (Corruption Suite) | `src/ingestion/corruption.py` | Clean DataFrame | `data/results/corruption_log.json`, `data/clean/papers_clean_corrupted.*` | Hoàn thành |
 
 Chỉ nhận ownership cho phần bạn trực tiếp thực hiện. Liên hệ rõ phần việc của bạn với đầu vào, đầu ra và các thành viên phụ thuộc vào phần đó.
 
@@ -39,6 +40,7 @@ Chỉ nhận ownership cho phần bạn trực tiếp thực hiện. Liên hệ 
 | Xây dựng Ingestion & Fallback snapshot | `src/ingestion/crossref.py` | Raw JSON records | Tải đủ 24 bài báo và lưu raw artifacts |
 | Data Cleaning & chuẩn hóa schema | `src/ingestion/cleaning.py` | Cleaned dataframe 24 dòng | Khử trùng lặp, tính `age_days`, tạo `text_for_embedding` |
 | Quản lý Embeddings & ChromaDB Collections | `src/retrieval/index.py` | Vector store indexed | ChromaDB collection nạp 24 docs |
+| Triển khai Synthetic Data Corruption Suite | `src/ingestion/corruption.py` | `corruption_log.json` & corrupted data | Tiêm đủ 6 dạng lỗi dữ liệu thực tế và ghi nhận log |
 
 Nêu một output cụ thể mà phần việc của bạn tạo ra hoặc giúp xác minh:
 
