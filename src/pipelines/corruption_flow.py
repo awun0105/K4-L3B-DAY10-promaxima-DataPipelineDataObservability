@@ -9,6 +9,7 @@ from core.config import Settings, load_settings
 from core.utils import read_json, write_csv, write_json
 from ingestion.corruption import corrupt_clean_dataframe
 from pipelines.phase1 import run_baseline_pipeline
+from retrieval.index import LocalEmbeddingIndex
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("corruption_flow")
@@ -41,7 +42,20 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     write_json(settings.paths.corrupted_clean_json, df_corrupted.to_dict(orient="records"))
     logger.info(f"-> Corrupted dataset saved with {len(df_corrupted)} rows.")
 
-    return {"df_clean": df_clean, "df_corrupted": df_corrupted, "baseline_metrics": baseline_metrics}
+    # 3. Build Chroma index for corrupted data
+    logger.info(f"[3/7] Building Chroma vector index for corrupted collection '{settings.corrupted_collection_name}'...")
+    corrupted_index = LocalEmbeddingIndex.build(
+        df=df_corrupted,
+        settings=settings,
+        embeddings_output_path=settings.paths.corrupted_embeddings_json,
+    )
+
+    return {
+        "df_clean": df_clean,
+        "df_corrupted": df_corrupted,
+        "corrupted_index": corrupted_index,
+        "baseline_metrics": baseline_metrics,
+    }
 
 
 def main() -> None:
