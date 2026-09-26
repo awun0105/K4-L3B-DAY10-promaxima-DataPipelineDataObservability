@@ -96,11 +96,31 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     write_json(settings.paths.repaired_clean_json, df_repaired.to_dict(orient="records"))
     logger.info(f"-> Idempotent Repair restored clean dataset with {len(df_repaired)} rows.")
 
+    # Re-build index for repaired collection
+    repaired_index = LocalEmbeddingIndex.build(
+        df=df_repaired,
+        settings=settings,
+        embeddings_output_path=settings.paths.repaired_embeddings_json,
+    )
+
+    # Re-evaluate repaired RAG on the SAME test set
+    repaired_bundle: EvaluationBundle = evaluate_pipeline(
+        settings=settings,
+        index=repaired_index,
+        test_set_path=settings.paths.eval_testset,
+        metrics_output_path=settings.paths.repaired_metrics,
+        answers_output_path=settings.paths.repaired_answers,
+    )
+    r_hr = repaired_bundle.summary.get("retrieval_hit_rate", 0.0)
+    r_f1 = repaired_bundle.summary.get("mean_token_f1", 0.0)
+    logger.info(f"-> Repaired Metrics: Retrieval Hit Rate = {r_hr:.2%}, Mean Token F1 = {r_f1:.4f}")
+
     return {
         "df_clean": df_clean,
         "df_corrupted": df_corrupted,
         "df_repaired": df_repaired,
         "corrupted_bundle": corrupted_bundle,
+        "repaired_bundle": repaired_bundle,
         "corrupted_quality": corrupted_quality,
         "corrupted_freshness": corrupted_freshness,
         "baseline_metrics": baseline_metrics,
