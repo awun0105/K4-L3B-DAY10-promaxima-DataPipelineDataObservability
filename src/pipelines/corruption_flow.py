@@ -6,7 +6,8 @@ from typing import Any
 import pandas as pd
 
 from core.config import Settings, load_settings
-from core.utils import read_json
+from core.utils import read_json, write_csv, write_json
+from ingestion.corruption import corrupt_clean_dataframe
 from pipelines.phase1 import run_baseline_pipeline
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -33,7 +34,14 @@ def run_corruption_and_repair_flow(settings: Settings | None = None) -> dict[str
     baseline_metrics = read_json(settings.paths.baseline_metrics)
     logger.info(f"[1/7] Loaded baseline dataset ({len(df_clean)} rows) and baseline metrics.")
 
-    return {"df_clean": df_clean, "baseline_metrics": baseline_metrics}
+    # 2. Corrupt data with synthetic errors
+    logger.info(f"[2/7] Injecting 6 synthetic data corruption scenarios into {settings.paths.corruption_log}...")
+    df_corrupted = corrupt_clean_dataframe(df_clean, output_log_path=settings.paths.corruption_log)
+    write_csv(df_corrupted, settings.paths.corrupted_clean_csv)
+    write_json(settings.paths.corrupted_clean_json, df_corrupted.to_dict(orient="records"))
+    logger.info(f"-> Corrupted dataset saved with {len(df_corrupted)} rows.")
+
+    return {"df_clean": df_clean, "df_corrupted": df_corrupted, "baseline_metrics": baseline_metrics}
 
 
 def main() -> None:
