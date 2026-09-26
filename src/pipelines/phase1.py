@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 from core.config import Settings, load_settings
+from core.utils import now_utc
+from ingestion.cleaning import build_clean_dataframe
 from ingestion.crossref import fetch_source_records, load_raw_records
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -28,7 +30,13 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
         records = fetch_source_records(settings)
     logger.info(f"-> Ingested {len(records)} raw records successfully.")
 
-    return {"records": records}
+    # 3. Clean raw records
+    logger.info("[2/8] Cleaning raw records and constructing `text_for_embedding`...")
+    run_date = now_utc()
+    df_clean = build_clean_dataframe(records, run_date=run_date)
+    logger.info(f"-> Clean DataFrame generated with {len(df_clean)} rows.")
+
+    return {"records": records, "df_clean": df_clean}
 
 
 def main() -> None:
