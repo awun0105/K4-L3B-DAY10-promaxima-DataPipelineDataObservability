@@ -4,7 +4,8 @@ import logging
 from typing import Any
 
 from core.config import Settings, load_settings
-from core.utils import now_utc, write_csv, write_json
+from core.utils import now_utc, read_json, write_csv, write_json
+from evaluation.testset import build_test_set
 from ingestion.cleaning import build_clean_dataframe
 from ingestion.crossref import fetch_source_records, load_raw_records
 from retrieval.index import LocalEmbeddingIndex
@@ -51,7 +52,16 @@ def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
     )
     logger.info(f"-> Indexed {len(index.documents)} documents into collection '{index.collection_name}'.")
 
-    return {"records": records, "df_clean": df_clean, "index": index}
+    # 6. Build or load test set
+    if settings.paths.eval_testset.exists() and not settings.refresh_test_set:
+        logger.info(f"[5/8] Loading existing evaluation test set from {settings.paths.eval_testset}...")
+        test_set = read_json(settings.paths.eval_testset)
+    else:
+        logger.info(f"[5/8] Generating 10-question evaluation benchmark test set into {settings.paths.eval_testset}...")
+        test_set = build_test_set(df_clean, output_path=settings.paths.eval_testset)
+    logger.info(f"-> Evaluation test set contains {len(test_set)} benchmark questions.")
+
+    return {"records": records, "df_clean": df_clean, "index": index, "test_set": test_set}
 
 
 def main() -> None:
