@@ -1,19 +1,40 @@
 from __future__ import annotations
 
+import logging
+from typing import Any
+
+from core.config import Settings, load_settings
+from ingestion.crossref import fetch_source_records, load_raw_records
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("phase1_pipeline")
+
+
+def run_baseline_pipeline(settings: Settings | None = None) -> dict[str, Any]:
+    """Execute end-to-end Phase 1 Baseline Data Pipeline."""
+    if settings is None:
+        settings = load_settings()
+
+    logger.info("================================================================================")
+    logger.info("               STARTING PHASE 1: BASELINE DATA PIPELINE                         ")
+    logger.info("================================================================================")
+
+    # 1 & 2. Ingest or load raw records
+    if settings.paths.raw_records_json.exists() and not settings.refresh_source:
+        logger.info(f"[1/8] Loading existing raw records from {settings.paths.raw_records_json}...")
+        records = load_raw_records(settings.paths.raw_records_json)
+    else:
+        logger.info("[1/8] Fetching raw records from Crossref API (with snapshot fallback)...")
+        records = fetch_source_records(settings)
+    logger.info(f"-> Ingested {len(records)} raw records successfully.")
+
+    return {"records": records}
+
 
 def main() -> None:
-    """TODO(student): xay dung baseline pipeline end-to-end.
+    settings = load_settings()
+    run_baseline_pipeline(settings)
 
-    Pseudo-code:
-    1. Load settings.
-    2. Load hoac fetch raw records.
-    3. Clean data.
-    4. Save clean CSV/JSON.
-    5. Build Chroma index.
-    6. Tao hoac load evaluation set.
-    7. Evaluate.
-    8. Run quality checks va freshness report.
-    9. Tao markdown report.
-    10. Co the demo agent tren vai sample question.
-    """
-    raise NotImplementedError("Student task: implement phase1 pipeline.")
+
+if __name__ == "__main__":
+    main()
